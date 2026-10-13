@@ -1,0 +1,7 @@
+#admin-anchor{display:inline-flex;align-items:center;gap:8px}
+.ankoo-admin-dialog{border:1px solid #4b5563;border-radius:14px;max-width:420px;width:90%;padding:24px;background:var(--card);color:var(--tx)}
+.ankoo-admin-dialog::backdrop{background:rgba(0,0,0,.6)}
+.ankoo-admin-dialog input{width:100%;padding:11px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx)}
+.ankoo-admin-dialog button{margin:8px 4px 0 0}
+.ankoo-admin-dialog p{line-height:1.4}
+#admin-anchor button{white-space:nowrap}

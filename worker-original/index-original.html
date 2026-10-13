@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nicks Roblox</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--tx:#1a1c20;--mu:#6b7280;--ac:#2563eb;--bd:#e5e7eb;--stage:#eceef2}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1114;--card:#1b1e24;--tx:#f1f3f5;--mu:#9aa1ad;--bd:#2c3038;--stage:#12141a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,sans-serif;padding:20px;max-width:1500px;margin:auto}
+h1{font-size:20px;margin:4px 0 12px}
+textarea{width:100%;height:70px;border:1px solid var(--bd);border-radius:10px;padding:10px;background:var(--card);color:var(--tx);font:inherit;resize:vertical}
+.row{display:flex;gap:8px;align-items:center;margin:8px 0 16px}
+button{border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:600;cursor:pointer;background:var(--ac);color:#fff}
+button.sec{background:var(--card);color:var(--tx);border:1px solid var(--bd)}
+#st{color:var(--mu);font-size:13px}
+#list{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;overflow:hidden;position:relative;cursor:grab}
+.card.drag{opacity:.4}
+.card.over{outline:2px solid var(--ac)}
+.stage{height:280px;background:var(--stage);display:flex;align-items:center;justify-content:center}
+.stage img{max-width:100%;max-height:100%;object-fit:contain;pointer-events:none}
+.bar{display:flex;align-items:center;gap:8px;padding:10px}
+.bar img,.ph{width:38px;height:38px;border-radius:8px;background:var(--bd);flex:none;pointer-events:none}
+.info{flex:1;min-width:0}
+.nick{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.id{color:var(--mu);font-size:11px}
+.bar button{padding:8px 10px;font-size:14px}
+.tools{position:absolute;top:6px;left:6px;right:6px;display:flex;gap:4px}
+.tools .sp{flex:1}
+.tools button{background:rgba(0,0,0,.45);padding:3px 9px;font-size:15px;border-radius:8px}
+</style>
+</head>
+<body>
+<h1>Nicks Roblox</h1>
+<textarea id="in" placeholder="Cole um ou vários links de perfil (ou IDs). Arraste os cards para reordenar."></textarea>
+<div class="row"><button id="add">Adicionar</button><button class="sec" id="ref">Atualizar agora</button><button class="sec" id="srv">Servidor</button><button class="sec" id="cod">Sincronizar</button><span id="st"></span></div>
+<div id="list"></div>
+<script>
+const KEY='roblox_nicks_v1';
+let data=[];
+try{data=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}push()};
+const getC=()=>{try{return localStorage.getItem('rn_code')||''}catch(e){return ''}};
+let synced=false,pt=null;
+function push(){
+  const w=getW(),c=getC();if(!w||!c||!synced)return;
+  clearTimeout(pt);
+  pt=setTimeout(()=>{fetch(`${w}/list?code=${encodeURIComponent(c)}`,{method:'POST',body:JSON.stringify(data)}).catch(()=>{})},600);
+}
+async function pull(){
+  const w=getW(),c=getC();if(!w||!c)return;
+  try{
+    const r=await fetch(`${w}/list?code=${encodeURIComponent(c)}`);
+    if(!r.ok)throw 0;
+    const j=await r.json();
+    if(Array.isArray(j.list)){data=j.list;try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+    synced=true;
+    if(!Array.isArray(j.list)&&data.length)push();
+    render();
+  }catch(e){$('st').textContent='Não consegui sincronizar a lista.'}
+}
+const $=id=>document.getElementById(id);
+
+let good=0;try{good=+localStorage.getItem('rn_good')||0}catch(e){}
+const ROUTES=[
+ (s,p)=>`https://${s}.roblox.com${p}`,
+ (s,p)=>`https://${s}.roproxy.com${p}`,
+ (s,p)=>`https://corsproxy.io/?url=${encodeURIComponent(`https://${s}.roblox.com${p}`)}`,
+ (s,p)=>`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://${s}.roblox.com${p}`)}`,
+ (s,p)=>`https://api.codetabs.com/v1/proxy/?quest=${`https://${s}.roblox.com${p}`}`
+];
+async function one(k,sub,path,ms){
+  const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);
+  try{
+    const r=await fetch(ROUTES[k](sub,path),{signal:c.signal});
+    if(!r.ok)throw new Error('http');
+    return await r.json();
+  }finally{clearTimeout(t)}
+}
+async function api(sub,path){
+  try{return await one(good,sub,path,6000)}catch(e){}
+  const rest=ROUTES.map((_,k)=>k).filter(k=>k!==good);
+  return await Promise.any(rest.map(k=>one(k,sub,path,8000).then(j=>{good=k;try{localStorage.setItem('rn_good',k)}catch(e){}return j})));
+}
+
+let dragFrom=null;
+function move(i,j){
+  if(j<0||j>=data.length||i===j)return;
+  const [x]=data.splice(i,1);data.splice(j,0,x);save();render();
+}
+function render(){
+  const L=$('list');L.innerHTML='';
+  data.forEach((u,i)=>{
+    const d=document.createElement('div');d.className='card';d.draggable=true;
+    d.ondragstart=e=>{dragFrom=i;d.classList.add('drag');e.dataTransfer.effectAllowed='move'};
+    d.ondragend=()=>d.classList.remove('drag');
+    d.ondragover=e=>{e.preventDefault();d.classList.add('over')};
+    d.ondragleave=()=>d.classList.remove('over');
+    d.ondrop=e=>{e.preventDefault();if(dragFrom!==null)move(dragFrom,i);dragFrom=null};
+    const big=u.body?`<img src="${u.body}" alt="">`:'';
+    const sm=u.img?`<img src="${u.img}" alt="">`:'<div class="ph"></div>';
+    d.innerHTML=`<div class="stage">${big}</div><div class="bar">${sm}<div class="info"><div class="nick">${u.name?'@'+u.name:'Carregando...'}</div><div class="id">ID ${u.id}</div></div></div>`;
+    const bar=d.querySelector('.bar');
+    const c=document.createElement('button');c.textContent='Copiar';c.onclick=()=>copy(u.name,c);
+    bar.append(c);
+    const t=document.createElement('div');t.className='tools';
+    const l=document.createElement('button');l.textContent='‹';l.title='Mover pra trás';l.onclick=()=>move(i,i-1);
+    const r=document.createElement('button');r.textContent='›';r.title='Mover pra frente';r.onclick=()=>move(i,i+1);
+    const sp=document.createElement('div');sp.className='sp';
+    const x=document.createElement('button');x.textContent='✕';x.title='Remover';
+    x.onclick=()=>{data=data.filter(v=>v.id!==u.id);save();render()};
+    t.append(l,r,sp,x);d.append(t);
+    L.append(d);
+  });
+}
+
+function copy(t,btn){
+  if(!t)return;
+  const done=()=>{const o=btn.textContent;btn.textContent='Copiado!';setTimeout(()=>btn.textContent=o,1200)};
+  const fb=()=>{const a=document.createElement('textarea');a.value=t;document.body.append(a);a.select();document.execCommand('copy');a.remove();done()};
+  if(navigator.clipboard)navigator.clipboard.writeText(t).then(done,fb);else fb();
+}
+
+async function thumbs(path,field){
+  const ids=data.map(u=>u.id);
+  for(let t=0;t<3;t++){
+    const th=await api('thumbnails',`${path}?userIds=${ids.join(',')}&format=Png&isCircular=false&size=${field==='body'?'420x420':'150x150'}`);
+    let pend=false;
+    (th.data||[]).forEach(r=>{const u=data.find(v=>v.id===String(r.targetId));if(u&&r.imageUrl)u[field]=r.imageUrl;if(r.state==='Pending')pend=true});
+    save();render();
+    if(!pend)break;
+    await new Promise(r=>setTimeout(r,600));
+  }
+}
+
+let last=0;
+const DEFAULT_W='https://user.ankoo.workers.dev';
+const getW=()=>{try{const v=localStorage.getItem('rn_worker');return v===null?DEFAULT_W:v}catch(e){return DEFAULT_W}};
+async function fast(w){
+  const ids=data.map(u=>u.id);
+  for(let t=0;t<3;t++){
+    const r=await fetch(`${w}?ids=${ids.join(',')}`);
+    if(!r.ok)throw new Error('w');
+    const j=await r.json();let pend=false,n=0;
+    data.forEach(u=>{const x=j[u.id];if(!x)return;if(x.name){u.name=x.name;n++}if(x.body)u.body=x.body;if(x.img)u.img=x.img;if(x.pending)pend=true});
+    save();render();
+    if(!n)throw new Error('vazio');
+    if(!pend)return n;
+    await new Promise(r=>setTimeout(r,600));
+  }
+  return data.length;
+}
+async function refresh(){
+  if(!data.length){$('st').textContent='';return}
+  last=Date.now();
+  $('st').textContent='Atualizando...';
+  const w=getW();
+  if(w){
+    try{const n=await fast(w);$('st').textContent=`Atualizado às ${new Date().toLocaleTimeString('pt-BR')} (${n}/${data.length}) • servidor`;return}catch(e){}
+  }
+  let ok=0;
+  const names=Promise.all(data.map(async u=>{
+    try{const r=await api('users','/v1/users/'+u.id);if(r&&r.name){u.name=r.name;ok++}}catch(e){}
+  })).then(()=>{save();render()});
+  const body=thumbs('/v1/users/avatar','body').catch(()=>{});
+  const head=thumbs('/v1/users/avatar-headshot','img').catch(()=>{});
+  await Promise.all([names,body,head]);
+  $('st').textContent=ok?`Atualizado às ${new Date().toLocaleTimeString('pt-BR')} (${ok}/${data.length})`:'Não consegui falar com o Roblox por nenhum caminho.';
+}
+
+$('add').onclick=()=>{
+  const found=$('in').value.match(/\d{3,}/g)||[];
+  found.forEach(id=>{if(!data.some(u=>u.id===id))data.push({id,name:'',img:'',body:''})});
+  $('in').value='';save();render();refresh();
+};
+$('ref').onclick=async()=>{await pull();refresh()};
+$('cod').onclick=async()=>{
+  const v=prompt('Escolha um código secreto (mín. 6 letras/números, sem espaço). Use o MESMO código em todos os aparelhos:',getC());
+  if(v===null)return;
+  const c=v.trim();
+  if(c&&!/^[\w-]{6,64}$/.test(c)){alert('Código inválido. Use só letras, números, - ou _ (mínimo 6).');return}
+  try{localStorage.setItem('rn_code',c)}catch(e){}
+  synced=false;await pull();refresh();
+};
+$('srv').onclick=()=>{
+  const v=prompt('Cole a URL do seu servidor (Cloudflare Worker). Deixe vazio para desativar:',getW());
+  if(v===null)return;
+  try{localStorage.setItem('rn_worker',v.trim().replace(/\/$/,''))}catch(e){}
+  refresh();
+};
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-last>30000)refresh()});
+render();pull().then(refresh);
+</script>
+</body>
+</html>

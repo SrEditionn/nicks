@@ -5,12 +5,11 @@ const reply = (json, status = 200, cookie = null) => new Response(JSON.stringify
 export async function onRequestGet({ request, env }) {
   // Retorna apenas os NOMES das configurações ausentes/inválidas; nunca seus valores.
   const missing = [];
-  if (typeof env?.ANKOO_ADMIN_PASSWORD !== 'string' || env.ANKOO_ADMIN_PASSWORD.length < 12) {
+  if (!/^[0-9]{4}$/.test(String(env?.ANKOO_ADMIN_PASSWORD ?? ''))) {
     missing.push('ANKOO_ADMIN_PASSWORD');
   }
-  if (typeof env?.ANKOO_SESSION_SECRET !== 'string' || env.ANKOO_SESSION_SECRET.length < 32) {
-    missing.push('ANKOO_SESSION_SECRET');
-  }
+  if (!env?.LIST) missing.push('LIST');
+  if (!/^[\w-]{6,64}$/.test(String(env?.ANKOO_LIST_CODE ?? ''))) missing.push('ANKOO_LIST_CODE');
   return reply({
     authenticated: await isAdmin(request, env),
     configured: adminConfigured(env),
@@ -26,7 +25,7 @@ export async function onRequestPost({ request, env }) {
   try { input = JSON.parse(text); } catch (_) { return reply({ error: 'JSON inválido.' }, 400); }
   if (input?.action === 'logout') return reply({ authenticated: false }, 200, cookieClear());
   if (input?.action !== 'login') return reply({ error: 'Ação inválida.' }, 400);
-  if (!adminConfigured(env)) return reply({ error: 'Acesso de administrador ainda não configurado na Cloudflare.' }, 503);
+  if (!adminConfigured(env)) return reply({ error: 'Configure seu PIN de 4 dígitos em ANKOO_ADMIN_PASSWORD na Cloudflare.' }, 503);
 
   // Limite aproximado por IP, armazenado sob chave DIFERENTE das listas antigas.
   // KV e eventual; também é recomendável configurar uma regra de rate limit no WAF.

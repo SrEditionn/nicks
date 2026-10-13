@@ -22,9 +22,14 @@ const secureEqual = (a, b) => {
 const hash = text => crypto.subtle.digest('SHA-256', utf8(text));
 const hmacKey = secret => crypto.subtle.importKey('raw', utf8(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
 const sign = async (secret, message) => crypto.subtle.sign('HMAC', await hmacKey(secret), utf8(message));
+// O PIN é o único segredo adicional necessário; a lista KV já usa ANKOO_LIST_CODE.
 export const adminConfigured = env =>
-  typeof env?.ANKOO_ADMIN_PASSWORD === 'string' && env.ANKOO_ADMIN_PASSWORD.length >= 12 &&
-  typeof env?.ANKOO_SESSION_SECRET === 'string' && env.ANKOO_SESSION_SECRET.length >= 32;
+  /^\d{4}$/.test(String(env?.ANKOO_ADMIN_PASSWORD ?? '')) &&
+  /^[\w-]{6,64}$/.test(String(env?.ANKOO_LIST_CODE ?? '')) && Boolean(env?.LIST);
+const sessionKey = env =>
+  typeof env.ANKOO_SESSION_SECRET === 'string' && env.ANKOO_SESSION_SECRET.length >= 32
+    ? env.ANKOO_SESSION_SECRET
+    : `ankoo-session-v5:${env.ANKOO_LIST_CODE}:${env.ANKOO_ADMIN_PASSWORD}`;
 export const assertSameOrigin = request => {
   const origin = request.headers.get('Origin');
   return origin === new URL(request.url).origin;
@@ -33,7 +38,7 @@ export const cookieClear = () => `${SESSION}=; HttpOnly; Secure; SameSite=Strict
 export const cookieMake = async env => {
   const now = Math.floor(Date.now() / 1000);
   const claim = toB64(utf8(JSON.stringify({ exp: now + WEEK, iat: now, nonce: toB64(crypto.getRandomValues(new Uint8Array(12))) })));
-  const signature = toB64(await sign(env.ANKOO_SESSION_SECRET, claim));
+  const signature = toB64(await sign(sessionKey(env), claim));
   return `${SESSION}=${claim}.${signature}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${WEEK}`;
 };
 export const isAdmin = async (request, env) => {
@@ -44,7 +49,7 @@ export const isAdmin = async (request, env) => {
   const [claim, signature, excess] = token.split('.');
   if (!claim || !signature || excess || claim.length > 400 || signature.length > 100) return false;
   try {
-    const valid = await crypto.subtle.verify('HMAC', await hmacKey(env.ANKOO_SESSION_SECRET), fromB64(signature), utf8(claim));
+    const valid = await crypto.subtle.verify('HMAC', await hmacKey(sessionKey(env)), fromB64(signature), utf8(claim));
     if (!valid) return false;
     const parsed = JSON.parse(decode(fromB64(claim)));
     const now = Math.floor(Date.now() / 1000);
@@ -53,7 +58,7 @@ export const isAdmin = async (request, env) => {
   } catch (_) { return false; }
 };
 export const checkPassword = async (password, env) => {
-  if (!adminConfigured(env) || typeof password !== 'string' || password.length > 256) return false;
+  if (!adminConfigured(env) || typeof password !== 'string' || !/^[0-9]{4}$/.test(password)) return false;
   const [a, b] = await Promise.all([hash(password), hash(env.ANKOO_ADMIN_PASSWORD)]);
   return secureEqual(new Uint8Array(a), new Uint8Array(b));
 };

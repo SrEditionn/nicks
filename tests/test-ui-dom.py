@@ -15,7 +15,7 @@ window.fetch = async function(url, options){
   if(!options?.method)return new Response(JSON.stringify({authenticated:window.__isAdmin,configured:true}),{status:200});
   const p=JSON.parse(options.body);
   if(p.action==='logout')window.__isAdmin=false;
-  else if(p.password==='correct-password')window.__isAdmin=true;
+  else if(p.password==='4826')window.__isAdmin=true;
   else return new Response(JSON.stringify({error:'Senha incorreta.'}),{status:401});
   return new Response(JSON.stringify({authenticated:window.__isAdmin}),{status:200});
  }
@@ -50,7 +50,7 @@ def signin(page):
  page.locator('.ankoo-admin-toggle').wait_for()
  page.wait_for_function("document.querySelector('.ankoo-admin-toggle').disabled===false")
  page.locator('.ankoo-admin-toggle').click()
- page.locator('#ankoo-admin-password').fill('correct-password')
+ page.locator('#ankoo-admin-password').fill('4826')
  page.locator('.ankoo-login-send').click()
  page.wait_for_function('window.AnkooAdmin.authenticated===true')
 
@@ -95,7 +95,7 @@ with sync_playwright() as p:
  assert 'Entrar' in pg2.locator('.save-button').first.inner_text()
  pg2.locator('.save-button').first.click()
  assert pg2.locator('#ankoo-login-dialog').evaluate('(el)=>el.open')
- pg2.locator('#ankoo-admin-password').fill('correct-password');pg2.locator('.ankoo-login-send').click()
+ pg2.locator('#ankoo-admin-password').fill('4826');pg2.locator('.ankoo-login-send').click()
  pg2.wait_for_function('window.AnkooAdmin.authenticated===true')
  pg2.locator('.save-button').first.click()
  pg2.get_by_text('✓ Adicionado').first.wait_for(timeout=5000)

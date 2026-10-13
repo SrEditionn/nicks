@@ -1,52 +1,11 @@
 <!doctype html>
-<html lang="pt-BR">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0d1019">
-  <title>Ankoo · Amigos do Roblox</title>
-  <meta name="description" content="Veja as skins e miniaturas de até 1.000 amigos de um perfil público do Roblox.">
-  <link rel="stylesheet" href="./style.css">
-  <link rel="stylesheet" href="/admin.css">
-  <script src="/admin.js" defer></script>
-  <script src="./app.js" defer></script>
-</head>
-<body>
-  <div class="ambient ambient-one" aria-hidden="true"></div>
-  <div class="ambient ambient-two" aria-hidden="true"></div>
-  <div class="page">
-    <header class="site-header">
-      <a class="brand" href="/" title="Voltar à página inicial"><span class="brand-icon">A</span><span>ANKOO<span class="brand-sub"> / ROBLOX</span></span></a>
-      <nav><a class="header-link" href="/">← Página inicial</a><span class="current-page">Amigos & skins</span><span id="admin-anchor"></span></nav>
-    </header>
-
-    <main>
-      <section class="hero">
-        <div class="eyebrow"><span class="light"></span> EXPLORADOR DE AVATARES</div>
-        <h1>Explore as skins dos <span>amigos.</span></h1>
-        <p>Cole o link de um perfil Roblox para ver todas as amizades disponíveis, com avatar de corpo inteiro e miniatura do rosto.</p>
-        <form id="search-form" class="search-form">
-          <label class="visually-hidden" for="profile-url">URL do perfil Roblox</label>
-          <div class="input-wrap"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10.5 3a7.5 7.5 0 1 0 4.7 13.34L21 22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="profile-url" type="text" spellcheck="false" autocomplete="off" placeholder="https://www.roblox.com/pt/users/123456/profile" required></div>
-          <button type="submit" id="submit-button">Buscar amigos <span aria-hidden="true">→</span></button>
-        </form>
-        <p class="helper">Um perfil por vez · Cole a URL ou apenas o ID · Adicione skins à lista principal sem sair desta página</p><p id="storage-status" class="storage-status">Conectando lista compartilhada...</p>
-      </section>
-
-      <section id="results" class="results is-hidden" aria-live="polite">
-        <div class="results-heading">
-          <div class="profile-summary"><div id="source-avatar" class="source-avatar"><span>R</span></div><div><div class="results-overline">AMIZADES DE</div><h2 id="source-name">Carregando...</h2><a id="source-link" href="#" target="_blank" rel="noopener noreferrer">Abrir perfil original ↗</a><button id="source-add" class="source-add" type="button" disabled>+ Adicionar perfil à lista</button></div></div>
-          <div class="stats"><div class="stat"><strong id="friends-count">0</strong><span>amigos encontrados</span></div><div class="stat"><strong id="pages-count">0</strong><span>páginas carregadas</span></div></div>
-        </div>
-        <div class="progress-wrap" id="progress-wrap"><div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div><span id="progress-text">Buscando amizades...</span></div>
-        <div class="toolbar"><label class="filter-wrap"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.7"/><path d="m16 16 5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><input id="filter" type="search" placeholder="Buscar pelo nick, nome ou ID..." autocomplete="off"></label><div class="tools-right"><label for="size-select">Tamanho</label><select id="size-select"><option value="regular">Normal</option><option value="large">Grande</option><option value="compact">Compacto</option></select><span id="visible-count" class="visible-count"></span></div></div>
-        <div id="gallery" class="gallery"></div>
-        <div id="empty-filter" class="empty-filter is-hidden">Nenhum amigo corresponde a essa busca.</div>
-      </section>
-      <div id="notice" class="notice is-hidden" role="status"></div>
-    </main>
-    <footer>ANKOO · Ferramenta independente, não afiliada ao Roblox · As imagens vêm da API pública do Roblox.</footer>
-  </div>
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-</body>
-</html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#10131b"><title>ANKOO · Amigos Roblox</title>
+<link rel="stylesheet" href="/amigos/style.css"><link rel="stylesheet" href="/minimal.css"><link rel="stylesheet" href="/admin.css"><script src="/admin.js" defer></script><script src="/amigos/app.js" defer></script></head><body>
+<div class="page"><header class="site-header"><a class="brand" href="/">ANKOO</a><nav><a class="header-link" href="/">Nicks salvos ↗</a><span id="admin-anchor"></span></nav></header>
+<main class="simple-main"><section class="simple-top friend-top"><div><h1>Amigos Roblox</h1><p id="storage-status" class="storage-status">Conectando lista...</p></div></section>
+<form id="search-form" class="search-form"><label class="visually-hidden" for="profile-url">URL do perfil Roblox</label><div class="input-wrap"><input id="profile-url" type="text" spellcheck="false" autocomplete="off" placeholder="Cole o link ou ID do perfil" required></div><button type="submit" id="submit-button">Buscar amigos →</button></form>
+<section id="results" class="results is-hidden" aria-live="polite"><div class="results-heading"><div class="profile-summary"><div id="source-avatar" class="source-avatar"><span>R</span></div><div class="source-data"><h2 id="source-name">Carregando...</h2><div class="profile-actions"><a id="source-link" href="#" target="_blank" rel="noopener noreferrer">Abrir perfil ↗</a><button id="source-add" class="source-add" type="button" disabled>+ Adicionar</button></div></div></div><div class="friend-totals"><strong id="friends-count">0</strong> amigos<span id="pages-count" hidden>0</span></div></div>
+<div class="progress-wrap" id="progress-wrap"><div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div><span id="progress-text">Buscando...</span></div>
+<div class="toolbar"><label class="filter-wrap"><input id="filter" type="search" placeholder="Buscar amigo" autocomplete="off"></label><div class="tools-right"><select id="size-select" aria-label="Tamanho dos cards"><option value="regular">Normal</option><option value="large">Grande</option><option value="compact">Compacto</option></select><span id="visible-count" class="visible-count" hidden></span></div></div>
+<div id="gallery" class="gallery"></div><div id="empty-filter" class="empty-filter is-hidden">Nenhum amigo encontrado.</div></section><div id="notice" class="notice is-hidden" role="status"></div></main></div><div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body></html>

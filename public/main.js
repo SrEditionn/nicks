@@ -301,10 +301,8 @@ window.AnkooAdmin.onChange(auth => {
   adminSession = auth;
   $('add').hidden = !auth;
   $('in').hidden = !auth;
-  $('edit-panel').classList.toggle('is-viewer', !auth);
-  $('edit-help').textContent = auth
-    ? 'Cole um ou vários links/IDs. Novos perfis entram no topo, sem duplicatas. Arraste os cartões para mudar a ordem.'
-    : 'Entre como administrador para adicionar, remover ou reorganizar os perfis.';
+  $('edit-panel').hidden = !auth;
+
   $('drag-hint').hidden = true;
   render();
 });

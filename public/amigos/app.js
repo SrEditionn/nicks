@@ -115,7 +115,7 @@
       savedIds = new Set((result.list || []).map(x => String(x.id)));
       listReady = true;
       listError = '';
-      $('#storage-status').textContent = `Lista compartilhada conectada · ${savedIds.size} usuários cadastrados · ${adminSession ? 'Edição habilitada' : 'Modo visualização'}`;
+      $('#storage-status').textContent = `${savedIds.size} skins salvas${adminSession ? ' · edição' : ''}`;
     } catch (error) {
       listReady = false;
       listError = `Sincronização indisponível: ${error.message}`;
@@ -387,7 +387,7 @@
   window.AnkooAdmin.onChange(admin => {
     adminSession = admin;
     updateSaveButtons();
-    if (listReady) $('#storage-status').textContent = `Lista compartilhada conectada · ${savedIds.size} usuários cadastrados · ${admin ? 'Edição habilitada' : 'Modo visualização'}`;
+    if (listReady) $('#storage-status').textContent = `${savedIds.size} skins salvas${admin ? ' · edição' : ''}`;
   });
   sourceAdd.addEventListener('click', () => { if (sourceProfile) saveProfile(sourceProfile, sourceAdd); });
   loadSavedIds();

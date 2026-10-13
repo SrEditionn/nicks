@@ -3,7 +3,7 @@ import { onRequestGet, onRequestPost } from '../functions/api/list.js';
 import { onRequestPost as authPost } from '../functions/api/auth.js';
 const mem = new Map();
 const kv={get:async key=>mem.has(key)?mem.get(key):null,put:async (key,val)=>{mem.set(key,val)},delete:async key=>{mem.delete(key)}};
-const env={LIST:kv,ANKOO_LIST_CODE:'MyOldCode-123',ANKOO_ADMIN_PASSWORD:'strong-admin-password-123',ANKOO_SESSION_SECRET:'SESSION_SECRET_long_random_never_shared_1234567890'};
+const env={LIST:kv,ANKOO_LIST_CODE:'MyOldCode-123',ANKOO_ADMIN_PASSWORD:'4826',ANKOO_SESSION_SECRET:'SESSION_SECRET_long_random_never_shared_1234567890'};
 const get=async customEnv=>{const resp=await onRequestGet({env:customEnv??env});return {status:resp.status,body:await resp.json()}};
 const req=(route,body,cookie='',origin='https://ankoo.pages.dev')=>new Request(`https://ankoo.pages.dev/api/${route}`,{method:'POST',headers:{'content-type':'application/json',origin,...(cookie?{cookie}:{})},body:JSON.stringify(body)});
 const auth=await authPost({request:req('auth',{action:'login',password:env.ANKOO_ADMIN_PASSWORD}),env});

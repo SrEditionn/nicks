@@ -66,16 +66,21 @@
   const form = document.createElement('form');
   form.className = 'ankoo-login-form';
   const title = document.createElement('h2');
-  title.textContent = 'Acesso de administrador';
+  title.textContent = 'Entrar para editar';
   const description = document.createElement('p');
-  description.textContent = 'Sua coleção fica sincronizada em qualquer dispositivo. Para editar, use a senha de administrador.';
+  description.textContent = 'Digite seu PIN de 4 dígitos.';
   const label = document.createElement('label');
   label.htmlFor = 'ankoo-admin-password';
-  label.textContent = 'Senha de administrador';
+  label.textContent = 'PIN de 4 dígitos';
   const input = document.createElement('input');
   input.id = 'ankoo-admin-password';
   input.type = 'password';
   input.autocomplete = 'current-password';
+  input.inputMode = 'numeric';
+  input.pattern = '[0-9]{4}';
+  input.maxLength = 4;
+  input.minLength = 4;
+  input.placeholder = '••••';
   input.required = true;
   label.append(input);
   const status = document.createElement('p');
@@ -131,9 +136,9 @@
     if (checkError) {
       setupText.textContent = `Não foi possível consultar /api/auth: ${checkError}. Confira a implantação e tente novamente.`;
     } else if (missing.length) {
-      setupText.textContent = `Faltam configurações de administrador no ambiente de Produção da Cloudflare: ${missing.join(', ')}. A senha deve ter ao menos 12 caracteres; a chave de sessão, 32. Cadastre-as como segredos criptografados em Configurações → Variáveis e segredos e depois clique em Verificar novamente.`;
+      setupText.textContent = `Configuração pendente: ${missing.join(', ')}. Cadastre seu PIN de 4 números em ANKOO_ADMIN_PASSWORD nas variáveis secretas de Produção da Cloudflare e toque em Verificar novamente.`;
     } else {
-      setupText.textContent = 'A Cloudflare ainda não confirmou as credenciais de edição. Verifique ANKOO_ADMIN_PASSWORD (mínimo 12 caracteres) e ANKOO_SESSION_SECRET (mínimo 32 caracteres) nas variáveis secretas do ambiente de Produção e tente novamente.';
+      setupText.textContent = 'Cadastre ANKOO_ADMIN_PASSWORD como PIN de 4 dígitos nas variáveis secretas de Produção da Cloudflare e verifique novamente.';
     }
   }
 
@@ -141,6 +146,7 @@
   loginBtn.onclick = () => authenticated ? session.logout() : session.openLogin();
   form.addEventListener('submit', async event => {
     event.preventDefault();
+    if (!/^[0-9]{4}$/.test(input.value)) { status.textContent = 'Digite exatamente 4 números.'; return; }
     status.textContent = 'Verificando...';
     send.disabled = true;
     try {

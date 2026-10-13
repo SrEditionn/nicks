@@ -3,7 +3,7 @@ import { onRequestGet as getAuth, onRequestPost as postAuth } from '../functions
 import { onRequestPost as edit } from '../functions/api/list.js';
 const mem = new Map([['l:oldKey',JSON.stringify([{id:'123456',name:'original',img:'',body:''}])]]);
 const kv={ get:async k=>mem.get(k)??null, put:async(k,v)=>mem.set(k,v), delete:async k=>mem.delete(k) };
-const env={LIST:kv,ANKOO_LIST_CODE:'oldKey',ANKOO_ADMIN_PASSWORD:'super-strong-secret-pass',ANKOO_SESSION_SECRET:'32-plus-random-server-only-secret-4567890'};
+const env={LIST:kv,ANKOO_LIST_CODE:'oldKey',ANKOO_ADMIN_PASSWORD:'4826'};
 const make=(method='GET',body, cookie='',origin='https://ankoo.pages.dev')=>new Request('https://ankoo.pages.dev/api/auth',{method,headers:{...(method==='POST'?{'content-type':'application/json',origin}:{}),...(cookie?{cookie}:{})},...(method==='POST'?{body:JSON.stringify(body)}:{})});
 const status=async cookie=>await (await getAuth({request:make('GET',null,cookie),env})).json();
 assert.deepEqual(await status(),{authenticated:false,configured:true,missing:[]});
@@ -13,12 +13,13 @@ login=await postAuth({request:make('POST',{action:'login',password:env.ANKOO_ADM
 assert.equal(login.status,403);
 login=await postAuth({request:make('POST',{action:'login',password:env.ANKOO_ADMIN_PASSWORD}),env});
 assert.equal(login.status,200);
+for(const bad of ['123','12345','abcd']) { const status=await (await getAuth({request:make(),env:{...env,ANKOO_ADMIN_PASSWORD:bad}})).json(); assert.equal(status.configured,false); }
 const header=login.headers.get('set-cookie');
 assert.match(header,/HttpOnly/i); assert.match(header,/Secure/i); assert.match(header,/SameSite=Strict/i);
 const cookie=header.split(';')[0];
 assert.equal((await status(cookie)).authenticated,true);
 assert.equal((await status(cookie.slice(0,-1)+'Z')).authenticated,false);
-assert.equal((await getAuth({request:make('GET',null,cookie),env:{...env,ANKOO_SESSION_SECRET:'DIFFERENT_SESSION_SECRET_that_is_long_enough'}}).then(x=>x.json())).authenticated,false);
+assert.equal((await getAuth({request:make('GET',null,cookie),env:{...env,ANKOO_ADMIN_PASSWORD:'9999'}}).then(x=>x.json())).authenticated,false);
 const adminReq=new Request('https://ankoo.pages.dev/api/list',{method:'POST',headers:{origin:'https://ankoo.pages.dev','content-type':'application/json',cookie},body:JSON.stringify({action:'add',items:[{id:'456789'}]})});
 assert.equal((await edit({request:adminReq,env})).status,200);
 assert.deepEqual(JSON.parse(mem.get('l:oldKey')).map(u=>u.id),['456789','123456']);

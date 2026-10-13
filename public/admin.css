@@ -21,3 +21,5 @@
 
 .ankoo-login-actions .ankoo-retry{background:#8190fc;border-color:#8190fc;color:#101725}
 .ankoo-login-actions .ankoo-retry:disabled{opacity:.6}
+
+.ankoo-login-dialog{border-radius:13px;padding:20px;max-width:340px}.ankoo-login-dialog h2{font-size:18px}.ankoo-login-dialog p{font-size:12px}.ankoo-login-dialog input{font-size:20px;text-align:center;letter-spacing:.38em}.ankoo-admin-toggle{font-size:12px!important;padding:8px 10px!important}.ankoo-setup .ankoo-setup-text{font-size:12px;line-height:1.5}

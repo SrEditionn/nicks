@@ -1,7 +1,23 @@
-#admin-anchor{display:inline-flex;align-items:center;gap:8px}
-.ankoo-admin-dialog{border:1px solid #4b5563;border-radius:14px;max-width:420px;width:90%;padding:24px;background:var(--card);color:var(--tx)}
-.ankoo-admin-dialog::backdrop{background:rgba(0,0,0,.6)}
-.ankoo-admin-dialog input{width:100%;padding:11px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx)}
-.ankoo-admin-dialog button{margin:8px 4px 0 0}
-.ankoo-admin-dialog p{line-height:1.4}
-#admin-anchor button{white-space:nowrap}
+/* Aparencia compartilhada do acesso de administrador, sem qualquer codigo de sincronizacao. */
+#admin-anchor{display:inline-flex;align-items:center}
+.ankoo-admin-toggle{white-space:nowrap;border-radius:9px;border:1px solid #6675aa!important;background:#253650!important;color:#f0f4ff!important;font-weight:750;cursor:pointer;padding:9px 12px;font:inherit;font-size:12px!important}
+.ankoo-admin-toggle:disabled{opacity:.55;cursor:default}
+.ankoo-login-dialog{width:min(92vw,420px);max-width:420px;border:1px solid #475476;border-radius:16px;background:#192234;color:#f3f5ff;box-shadow:0 22px 70px #0009;padding:24px}
+.ankoo-login-dialog::backdrop{background:#070a13b9}
+.ankoo-login-dialog h2{font-size:20px;margin:0 0 10px;font-weight:800}
+.ankoo-login-dialog p{font-size:13px;line-height:1.55;color:#bdc8de;margin:0 0 16px}
+.ankoo-login-dialog label{font-size:12px;font-weight:720;display:block}
+.ankoo-login-dialog input{display:block;margin-top:7px;width:100%;padding:13px;background:#0c1220;border:1px solid #485471;border-radius:10px;color:#fff;font:inherit;font-size:15px}
+.ankoo-login-dialog .ankoo-login-status{color:#ffd1ac;min-height:20px;margin:8px 0}
+.ankoo-login-actions{display:flex;gap:10px;justify-content:flex-end}
+.ankoo-login-actions button{border:1px solid #445476;background:#253148;color:#f2f4ff;border-radius:9px;padding:10px 16px;font:inherit;font-weight:750;cursor:pointer}
+.ankoo-login-actions .ankoo-login-send{background:#8190fc;border-color:#8190fc;color:#101725}
+.ankoo-login-actions .ankoo-login-send:disabled{opacity:.6}
+[hidden]{display:none!important}
+/* Aviso de configuração: mantém o botão de login clicável para diagnóstico. */
+.ankoo-setup h2{font-size:20px;margin:0 0 12px}
+.ankoo-setup .ankoo-setup-text{line-height:1.7;color:#cdd8ef;font-size:13px;overflow-wrap:anywhere;margin-bottom:22px}
+.ankoo-setup .ankoo-login-actions{flex-wrap:wrap}
+
+.ankoo-login-actions .ankoo-retry{background:#8190fc;border-color:#8190fc;color:#101725}
+.ankoo-login-actions .ankoo-retry:disabled{opacity:.6}

@@ -2,24 +2,80 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Nicks Roblox</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d1019">
+  <meta name="description" content="Sua coleção de avatares Roblox sincronizada com a Cloudflare.">
+  <title>Ankoo · Nicks Roblox</title>
+  <link rel="stylesheet" href="/amigos/style.css">
   <link rel="stylesheet" href="/site.css">
   <link rel="stylesheet" href="/admin.css">
-</head>
-<body>
-  <h1>Nicks Roblox</h1>
-  <textarea id="in" placeholder="Cole links ou IDs de perfis Roblox. Novos entram no topo."></textarea>
-  <div class="row">
-    <button id="add">Adicionar</button>
-    <button class="sec" id="ref">Atualizar agora</button>
-    <a class="friend-link" href="/amigos/">Ver amigos e skins ↗</a>
-    <span id="admin-anchor"></span>
-    <span id="st"></span>
-  </div>
-  <div id="drag-hint" class="drag-hint" hidden>Arraste para perto das bordas para rolar a página.</div>
-  <div id="list"></div>
   <script src="/admin.js" defer></script>
   <script src="/main.js" defer></script>
+</head>
+<body>
+  <div class="ambient ambient-one" aria-hidden="true"></div>
+  <div class="ambient ambient-two" aria-hidden="true"></div>
+  <div class="page">
+    <header class="site-header">
+      <a class="brand" href="/" title="Página principal do Ankoo"><span class="brand-icon">A</span><span>ANKOO<span class="brand-sub"> / ROBLOX</span></span></a>
+      <nav>
+        <span class="current-page">Nicks salvos</span>
+        <a class="header-link" href="/amigos/">Amigos &amp; skins →</a>
+        <span id="admin-anchor"></span>
+      </nav>
+    </header>
+    <main>
+      <section class="hero home-hero">
+        <div class="eyebrow"><span class="light"></span> SUA COLEÇÃO DE AVATARES</div>
+        <h1>Suas skins, <span>sempre atualizadas.</span></h1>
+        <p>Guarde os perfis Roblox que você mais gosta. Veja o avatar de corpo inteiro, copie o @nick atual e mantenha a mesma coleção em qualquer dispositivo.</p>
+        <div class="quick-actions">
+          <a class="explore-link" href="/amigos/">Explorar amigos e skins <span aria-hidden="true">↗</span></a>
+          <button class="refresh-button" id="ref" type="button">↻ Atualizar agora</button>
+        </div>
+        <div class="collection-helper">Sincronização automática pela Cloudflare · Sem IDs duplicados · Skins novas aparecem primeiro</div>
+      </section>
+
+      <section class="library" aria-label="Minha coleção">
+        <div class="library-heading">
+          <div>
+            <div class="results-overline">BIBLIOTECA DE PERFIS</div>
+            <h2>Minha coleção</h2>
+            <p id="st" class="library-status" role="status" aria-live="polite">Conectando lista compartilhada...</p>
+          </div>
+          <div class="stats">
+            <div class="stat"><strong id="total-count">0</strong><span>perfis cadastrados</span></div>
+          </div>
+        </div>
+        <div class="edit-panel" id="edit-panel">
+          <label for="in">Adicionar perfis Roblox</label>
+          <div class="edit-inputs">
+            <textarea id="in" hidden placeholder="Cole links de perfis ou IDs Roblox aqui, um por linha..." rows="2" aria-label="Links de perfis Roblox"></textarea>
+            <button type="button" id="add" hidden>+ Adicionar ao topo</button>
+          </div>
+          <p id="edit-help">Entre como administrador para adicionar, remover ou reorganizar os perfis.</p>
+        </div>
+        <div class="toolbar library-toolbar">
+          <label class="filter-wrap">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.7"/><path d="m16 16 5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <input id="filter" type="search" placeholder="Buscar por nick ou ID..." autocomplete="off" aria-label="Filtrar perfis salvos">
+          </label>
+          <div class="tools-right">
+            <label for="size-select">Tamanho</label>
+            <select id="size-select" aria-label="Tamanho dos cartões">
+              <option value="regular">Normal</option>
+              <option value="large">Grande</option>
+              <option value="compact">Compacto</option>
+            </select>
+            <span id="visible-count" class="visible-count">0 visíveis</span>
+          </div>
+        </div>
+        <div id="list" class="gallery saved-gallery"></div>
+        <div id="empty-filter" class="empty-filter is-hidden">Nenhuma skin corresponde à sua busca.</div>
+        <div id="drag-hint" class="drag-hint" hidden>Arraste o cartão até a borda para rolar a página automaticamente.</div>
+      </section>
+    </main>
+    <footer>ANKOO · Ferramenta independente, não afiliada ao Roblox · As imagens vêm da API pública do Roblox.</footer>
+  </div>
 </body>
 </html>

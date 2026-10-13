@@ -3,7 +3,19 @@ const H = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 
 const reply = (json, status = 200, cookie = null) => new Response(JSON.stringify(json), { status, headers: cookie ? { ...H, 'set-cookie': cookie } : H });
 
 export async function onRequestGet({ request, env }) {
-  return reply({ authenticated: await isAdmin(request, env), configured: adminConfigured(env) });
+  // Retorna apenas os NOMES das configurações ausentes/inválidas; nunca seus valores.
+  const missing = [];
+  if (typeof env?.ANKOO_ADMIN_PASSWORD !== 'string' || env.ANKOO_ADMIN_PASSWORD.length < 12) {
+    missing.push('ANKOO_ADMIN_PASSWORD');
+  }
+  if (typeof env?.ANKOO_SESSION_SECRET !== 'string' || env.ANKOO_SESSION_SECRET.length < 32) {
+    missing.push('ANKOO_SESSION_SECRET');
+  }
+  return reply({
+    authenticated: await isAdmin(request, env),
+    configured: adminConfigured(env),
+    missing,
+  });
 }
 export async function onRequestPost({ request, env }) {
   if (!assertSameOrigin(request)) return reply({ error: 'Origem não autorizada.' }, 403);

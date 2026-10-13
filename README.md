@@ -1,4 +1,4 @@
-# ANKOO v3 · Lista protegida + explorador de amigos Roblox
+# ANKOO v4 · Interface unificada + login com diagnóstico
 
 Versão baseada nos arquivos `index.html` e `worker.js` originais fornecidos pelo proprietário. **Código-fonte do repositório GitHub `SrEditionn/nicks`. A publicação na Cloudflare é manual, pelo GitHub Actions.** Os arquivos originais são mantidos em `worker-original/` para referência.
 
@@ -12,6 +12,12 @@ Versão baseada nos arquivos `index.html` e `worker.js` originais fornecidos pel
 - **`GET /api/auth` e `POST /api/auth`:** consulta de sessão, login e logout. A senha fica exclusivamente em segredo da Cloudflare; o navegador recebe um cookie `HttpOnly`, `Secure`, `SameSite=Strict`, assinado por HMAC e válido por 7 dias. O navegador **nunca recebe** o código de sincronização antigo. Há um limite aproximado de tentativas de login por IP no KV (também é recomendável proteção WAF).
 
 **Atenção:** ter a senha de administrador equivale a ter permissão de edição. Não divulgue a senha; outras pessoas com ela também poderão editar. O Worker original ainda aceita a chave de sincronização antiga, então esse código também deve continuar secreto. Após validar a migração, considere bloquear a rota de escrita `/list` no Worker antigo, para não existir outro caminho de edição.
+
+## Visual e diagnóstico de login (v4)
+
+A página principal `/` usa agora o **mesmo tema** da página `/amigos/`: cabeçalho, fundo escuro, cores lilás, cartões com a skin grande e foto de rosto, tamanhos configuráveis e filtro por nick/ID. O botão de copiar continua copiando exclusivamente o @nick. A lista e o Worker original não foram alterados.
+
+Se **Entrar para editar** não funcionar, clique nele: em vez de desativar o botão, o site mostra quais configurações do administrador faltam. O endpoint `GET /api/auth` responde algo como `{ "authenticated": false, "configured": false, "missing": ["ANKOO_ADMIN_PASSWORD"] }`, sem revelar nenhuma senha. Corrija a variável no ambiente **Produção** do Cloudflare Pages, como **Secret**, com nome exato. `ANKOO_ADMIN_PASSWORD` exige no mínimo 12 caracteres; `ANKOO_SESSION_SECRET`, 32. Clique em **Verificar novamente**. Se o erro persistir, confira se a vinculação e os segredos estão associados ao mesmo projeto Pages em produção e faça nova implantação, se necessário.
 
 ## Como manter os nicks já existentes
 

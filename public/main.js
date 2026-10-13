@@ -80,48 +80,110 @@ function el(tag, className, text) {
   if (text !== undefined) element.textContent=text;
   return element;
 }
+function applyFilter() {
+  const input = $('filter');
+  const needle = (input?.value || '').trim().toLocaleLowerCase('pt-BR');
+  let visible = 0;
+  for (const card of $('list').children) {
+    const match = (card.dataset.search || '').includes(needle);
+    card.hidden = !match;
+    if (match) visible++;
+  }
+  $('total-count').textContent = data.length.toLocaleString('pt-BR');
+  $('visible-count').textContent = `${visible.toLocaleString('pt-BR')} visíveis`;
+  $('empty-filter').classList.toggle('is-hidden', visible !== 0 || data.length === 0);
+}
 function render() {
-  const list=$('list');
-  const fragment=document.createDocumentFragment();
-  data.forEach((u,i) => {
-    const card=el('div','card');card.draggable=adminSession;card.dataset.id=u.id;
-    card.style.cursor=adminSession?'grab':'default';
-    card.ondragstart=e => {
+  const list = $('list');
+  const fragment = document.createDocumentFragment();
+  data.forEach((u, i) => {
+    const card = el('article', 'card');
+    card.draggable = adminSession;
+    card.dataset.id = u.id;
+    card.dataset.search = `${u.name} ${u.id}`.toLocaleLowerCase('pt-BR');
+    card.style.cursor = adminSession ? 'grab' : 'default';
+    card.ondragstart = e => {
       if (!adminSession) { e.preventDefault(); return; }
-      dragId=u.id;
-      e.dataTransfer.effectAllowed='move';
-      e.dataTransfer.setData('text/plain',u.id);
+      dragId = u.id;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', u.id);
       card.classList.add('drag');
-      $('drag-hint').hidden=false;
+      $('drag-hint').hidden = false;
     };
-    card.ondragend=stopDrag;
-    card.ondragover=e => { if (adminSession) { e.preventDefault();card.classList.add('over'); } };
-    card.ondragleave=()=>card.classList.remove('over');
-    card.ondrop=e => {
+    card.ondragend = stopDrag;
+    card.ondragover = e => {
       if (!adminSession) return;
-      e.preventDefault();stopDrag();
-      const newIndex=data.findIndex(x=>x.id===u.id);
-      moveTo(dragId || e.dataTransfer.getData('text/plain'),newIndex);
+      e.preventDefault();
+      card.classList.add('over');
     };
-    const stage=el('div','stage');
-    if(u.body) {const img=el('img');img.src=u.body;img.alt=`Avatar de ${u.name}`;img.loading='lazy';stage.append(img);}
-    const bar=el('div','bar');
-    if(u.img) {const img=el('img');img.src=u.img;img.alt='Miniatura';img.loading='lazy';bar.append(img);}
-    else bar.append(el('div','ph'));
-    const info=el('div','info');info.append(el('div','nick',u.name?`@${u.name}`:'Carregando...'),el('div','id',`ID ${u.id}`));
-    bar.append(info);
-    const copyButton=el('button',null,'Copiar');copyButton.title='Copiar nickname';copyButton.onclick=()=>copy(u.name,copyButton);bar.append(copyButton);
-    const top=el('div','tools');
-    const left=el('button',null,'‹');left.title='Mover para trás';left.onclick=()=>moveTo(u.id,i-1);
-    const right=el('button',null,'›');right.title='Mover para frente';right.onclick=()=>moveTo(u.id,i+1);
-    const space=el('div','sp');
-    const open=el('button',null,'↗');open.title='Abrir perfil Roblox';open.onclick=()=>window.open(profileUrl(u.id),'_blank','noopener');
-    const remove=el('button',null,'✕');remove.title='Remover da lista';remove.onclick=async()=>mutate({action:'remove',id:u.id});
-    left.hidden = !adminSession;right.hidden = !adminSession;remove.hidden = !adminSession;
-    top.append(left,right,space,open,remove);
-    card.append(stage,bar,top);fragment.append(card);
+    card.ondragleave = () => card.classList.remove('over');
+    card.ondrop = e => {
+      if (!adminSession) return;
+      e.preventDefault();
+      const source = dragId || e.dataTransfer.getData('text/plain');
+      const newIndex = data.findIndex(x => x.id === u.id);
+      stopDrag();
+      moveTo(source, newIndex);
+    };
+
+    const stage = el('div', 'stage');
+    if (u.body) {
+      const image = el('img', 'fullbody');
+      image.src = u.body;
+      image.alt = `Avatar de ${u.name || u.id}`;
+      image.loading = 'lazy';
+      stage.append(image);
+    } else {
+      stage.append(el('div', 'avatar-placeholder', '?'));
+    }
+    if (u.img) {
+      const image = el('img', 'headshot');
+      image.src = u.img;
+      image.alt = `Miniatura de ${u.name || u.id}`;
+      image.loading = 'lazy';
+      stage.append(image);
+    }
+
+    const content = el('div', 'card-content');
+    content.append(
+      el('div', 'card-display', u.name ? `@${u.name}` : 'Carregando...'),
+      el('div', 'card-username', `ID ${u.id}`),
+    );
+    const buttons = el('div', 'card-buttons');
+    const copyButton = el('button', 'copy-button', 'Copiar nick');
+    copyButton.type = 'button';
+    copyButton.title = 'Copiar apenas o nickname';
+    copyButton.onclick = () => copy(u.name, copyButton);
+    const open = el('a', 'open-button', 'Abrir ↗');
+    open.href = profileUrl(u.id);
+    open.target = '_blank';
+    open.rel = 'noopener noreferrer';
+    open.title = 'Abrir perfil Roblox em outra aba';
+    buttons.append(copyButton, open);
+    content.append(buttons);
+
+    const top = el('div', 'tools');
+    const left = el('button', null, '‹');
+    left.type = 'button';
+    left.title = 'Mover para trás';
+    left.onclick = () => moveTo(u.id, i - 1);
+    const right = el('button', null, '›');
+    right.type = 'button';
+    right.title = 'Mover para frente';
+    right.onclick = () => moveTo(u.id, i + 1);
+    const remove = el('button', 'remove-btn', '×');
+    remove.type = 'button';
+    remove.title = 'Remover da lista';
+    remove.onclick = () => mutate({ action: 'remove', id: u.id });
+    left.hidden = !adminSession;
+    right.hidden = !adminSession;
+    remove.hidden = !adminSession;
+    top.append(left, right, remove);
+    card.append(stage, content, top);
+    fragment.append(card);
   });
   list.replaceChildren(fragment);
+  applyFilter();
 }
 async function moveTo(id,toIndex) {
   if (!adminSession || !id || toIndex < 0 || toIndex >= data.length) return;
@@ -239,8 +301,18 @@ window.AnkooAdmin.onChange(auth => {
   adminSession = auth;
   $('add').hidden = !auth;
   $('in').hidden = !auth;
+  $('edit-panel').classList.toggle('is-viewer', !auth);
+  $('edit-help').textContent = auth
+    ? 'Cole um ou vários links/IDs. Novos perfis entram no topo, sem duplicatas. Arraste os cartões para mudar a ordem.'
+    : 'Entre como administrador para adicionar, remover ou reorganizar os perfis.';
   $('drag-hint').hidden = true;
   render();
+});
+$('filter').addEventListener('input', applyFilter);
+$('size-select').addEventListener('change', () => {
+  const gallery = $('list');
+  gallery.classList.toggle('large', $('size-select').value === 'large');
+  gallery.classList.toggle('compact', $('size-select').value === 'compact');
 });
 render();
 pull().then(ok=>{if(ok)refresh()});

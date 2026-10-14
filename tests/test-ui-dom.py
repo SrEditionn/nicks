@@ -97,9 +97,23 @@ with sync_playwright() as p:
  assert pg2.locator('#ankoo-login-dialog').evaluate('(el)=>el.open')
  pg2.locator('#ankoo-admin-password').fill('4826');pg2.locator('.ankoo-login-send').click()
  pg2.wait_for_function('window.AnkooAdmin.authenticated===true')
+ # Mock a popup to verify it is opened synchronously before the asynchronous save.
+ # The current tab keeps displaying the original owner while the new tab gets
+ # the clicked friend's ID as the next auto-consultation.
+ pg2.evaluate("""window.__popup = { opened:[], navigated:[], closed:false };
+ window.open = (url,target) => {
+   window.__popup.opened.push([url,target]);
+   return { location:{ replace:(next)=>window.__popup.navigated.push(next) },
+     closed:false, close(){window.__popup.closed=true}, set opener(value){} };
+ };""")
  pg2.locator('.save-button').first.click()
  pg2.get_by_text('✓ Adicionado').first.wait_for(timeout=5000)
+ pg2.wait_for_function('window.__popup.navigated.length===1')
  assert pg2.evaluate('window.__items[0].id')=='888'
+ assert ['about:blank','_blank'] in pg2.evaluate('window.__popup.opened')
+ assert pg2.evaluate('window.__popup.navigated')==['/amigos/?user=888']
+ assert '12345' in pg2.locator('#profile-url').input_value(), 'Consulta original mudou'
+ assert pg2.locator('.friend-card').count()==1, 'A lista original foi substituida'
  assert not err2,err2
- print('Navegador: amigos publicos, pedir login, adicionar apos autenticacao e confirmar OK')
+ print('Navegador: login, adicionar amigo e abrir nova consulta em outra guia sem substituir a atual OK')
  b.close()

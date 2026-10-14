@@ -67,9 +67,25 @@
     return payload;
   }
 
+  // Abra uma guia vazia no clique, antes do fetch: abrir depois do await pode
+  // ser bloqueado pelo navegador por nao estar ligado diretamente ao clique.
+  // A navegacao ocorre somente apos a confirmacao de que a lista foi salva.
+  function prepareFriendsTab(userId) {
+    let tab = null;
+    try {
+      tab = window.open('about:blank', '_blank');
+      if (tab) {
+        tab.opener = null;
+        window.focus(); // Melhor esforco: o navegador decide qual guia recebe foco.
+      }
+    } catch (_) { /* A edicao ainda deve funcionar caso popups sejam bloqueados. */ }
+    return { tab, url: `/amigos/?user=${encodeURIComponent(userId)}` };
+  }
+
   async function saveProfile(user, button) {
     if (!adminSession) { window.AnkooAdmin.openLogin(); return; }
     if (!listReady) { showToast(listError || 'Lista compartilhada indisponível.'); return; }
+    const next = prepareFriendsTab(user.id);
     button.disabled = true;
     const previous = button.textContent;
     button.textContent = 'Salvando...';
@@ -85,8 +101,21 @@
       if (!response.ok) throw new Error(result.error || 'Falha ao salvar.');
       savedIds = new Set((result.list || []).map(x => String(x.id)));
       updateSaveButtons();
-      showToast(result.added ? `@${user.name} adicionado à página inicial!` : 'Este perfil já está na sua lista.');
+      if (next.tab && !next.tab.closed) {
+        try {
+          next.tab.location.replace(next.url);
+          window.focus(); // Nao troca a consulta na guia original.
+        } catch (_) {
+          showToast('Perfil salvo, mas não foi possível abrir a nova guia.');
+          return;
+        }
+        showToast(result.added ? `@${user.name} adicionado! Abrindo amigos...` : 'Já estava na lista. Abrindo amigos...');
+      } else {
+        // Acoes automáticas podem ser bloqueadas pela configuracao de popups.
+        showToast('Perfil salvo. O navegador bloqueou a nova guia; permita popups para o Ankoo.');
+      }
     } catch (error) {
+      try { if (next.tab && !next.tab.closed) next.tab.close(); } catch (_) {}
       button.disabled = false;
       button.textContent = previous;
       showToast(error.message || 'Erro ao adicionar perfil.');

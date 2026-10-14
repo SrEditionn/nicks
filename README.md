@@ -21,3 +21,7 @@ Repositório: https://github.com/SrEditionn/nicks — executar manualmente a Act
 ## Testes
 
 `node tests/test-auth.mjs`, `node tests/test-list.mjs`, `node tests/test-api.mjs`, `python tests/verificar_arquivos.py`.
+
+## Consulta de amigos: erro 401
+
+A API primeiro tenta a paginação oficial do Roblox `/v1/users/{id}/friends/find`, sem forçar `FriendScore` (permite até 1.000 amigos quando autorizado). Se a primeira página retornar 400, 401 ou 403, tenta `/v1/users/{id}/friends`, que retorna no máximo 200 amigos. A interface informa quando os resultados são parciais. Se os dois endpoints recusarem acesso, apresenta uma mensagem clara; não utiliza cookies de login Roblox nem contorna restrições de privacidade. A correção foi testada com respostas simuladas: acesso normal, recusa 401 e fallback parcial. O funcionamento com Roblox real deve ser validado após a publicação.

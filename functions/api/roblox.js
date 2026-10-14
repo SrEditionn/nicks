@@ -46,6 +46,9 @@ async function readRoblox(url, init = {}, retries = 2) {
     if (response.status === 429) {
       throw new ApiError('O Roblox está limitando as consultas. Tente novamente em alguns instantes.', 429);
     }
+    if (response.status === 401) {
+      throw new ApiError('O Roblox exigiu autenticação para acessar as amizades. Não foi possível consultar publicamente esse perfil.', 401);
+    }
     if (response.status === 403) {
       throw new ApiError('O Roblox não permitiu acessar esses dados. As amizades podem estar restritas.', 403);
     }
@@ -82,17 +85,36 @@ export async function onRequestGet({ request }) {
         throw new ApiError('Cursor de paginação inválido.', 400);
       }
 
-      // IMPORTANT: non-paginated /friends is capped at 200; /friends/find returns up to 50/page.
+      // For unauthenticated lookups do not force FriendScore (primarily meant for
+      // the account's own friends). Roblox defaults to a suitable public sort.
+      // /friends/find paginates at 50; public /friends can return at most 200.
       const url = new URL(`${FRIENDS}/v1/users/${userId}/friends/find`);
       url.searchParams.set('limit', '50');
-      url.searchParams.set('userSort', 'FriendScore');
       if (cursor) url.searchParams.set('cursor', cursor);
-      const page = await readRoblox(url.toString());
-      if (!Array.isArray(page.PageItems)) {
-        throw new ApiError('O Roblox não disponibilizou a lista de amizades desse perfil.', 502);
+      let entries, nextCursor = null, limited = false;
+      try {
+        const page = await readRoblox(url.toString());
+        if (!Array.isArray(page.PageItems)) throw new ApiError('Resposta de amizades inválida.', 502);
+        entries = page.PageItems;
+        nextCursor = typeof page.NextCursor === 'string' && page.NextCursor ? page.NextCursor : null;
+      } catch (findError) {
+        // A denied first page may still be readable via the older public route.
+        // Never replace a subsequent paginated page with the first 200 entries.
+        if (cursor || ![400, 401, 403].includes(findError.status)) throw findError;
+        try {
+          const fallback = await readRoblox(`${FRIENDS}/v1/users/${userId}/friends`, {}, 1);
+          if (!Array.isArray(fallback.data)) throw new ApiError('Resposta de amizades inválida.', 502);
+          entries = fallback.data;
+          limited = true;
+        } catch (fallbackError) {
+          if ([401, 403].includes(fallbackError.status)) {
+            throw new ApiError('O Roblox recusou as duas consultas públicas de amizades (acesso não autorizado). Este perfil pode exigir autenticação ou ter amizades restritas.', 403);
+          }
+          throw fallbackError;
+        }
       }
 
-      const ids = [...new Set(page.PageItems.map((entry) => String(entry?.id ?? '')).filter(validId))];
+      const ids = [...new Set(entries.map((entry) => String(entry?.id ?? '')).filter(validId))];
       let details = new Map();
       if (ids.length) {
         try {
@@ -112,7 +134,9 @@ export async function onRequestGet({ request }) {
           name: details.get(id)?.name || `ID ${id}`,
           displayName: details.get(id)?.displayName || details.get(id)?.name || `ID ${id}`,
         })),
-        nextCursor: typeof page.NextCursor === 'string' && page.NextCursor ? page.NextCursor : null,
+        nextCursor,
+        limited,
+        ...(limited ? { note: 'O Roblox liberou apenas a consulta de até 200 amigos. A lista pode estar incompleta.' } : {}),
       });
     }
 

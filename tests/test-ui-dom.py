@@ -90,7 +90,7 @@ with sync_playwright() as p:
  pg2.add_script_tag(content=admin_js);pg2.add_script_tag(content=friend_js)
  pg2.locator('#profile-url').fill('https://www.roblox.com/pt/users/12345/profile');pg2.locator('#submit-button').click()
  pg2.locator('.friend-card').first.wait_for(timeout=5000)
- pg2.wait_for_function("document.querySelector('#storage-status').textContent.includes('conectada')")
+ pg2.wait_for_function("document.querySelector('#storage-status').textContent.includes('skins salvas')")
  assert pg2.locator('.save-button').count()==1
  assert 'Entrar' in pg2.locator('.save-button').first.inner_text()
  pg2.locator('.save-button').first.click()

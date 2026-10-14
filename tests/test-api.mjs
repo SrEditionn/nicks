@@ -8,7 +8,11 @@ globalThis.fetch = async (url, options={}) => {
   const u = new URL(url);
   calls.push(u.pathname);
   if(u.hostname === 'friends.roblox.com') {
+    if (u.pathname === '/v1/users/98765/friends/find') return new Response('{}', {status:401});
+    if (u.pathname === '/v1/users/98765/friends') return Response.json({data:[{id:20},{id:21}]});
+    if (u.pathname === '/v1/users/87654/friends/find' || u.pathname === '/v1/users/87654/friends') return new Response('{}', {status:401});
     assert(u.pathname === '/v1/users/12345/friends/find');
+    assert.equal(u.searchParams.has('userSort'), false);
     const cursor=u.searchParams.get('cursor');
     return Response.json(cursor ? {PageItems:[{id:3}],NextCursor:null}:{PageItems:[{id:1},{id:2}],NextCursor:'next'});
   }
@@ -36,6 +40,14 @@ assert.equal(first.body.nextCursor,'next');
 const second=await get('/api/roblox?action=friends&userId=12345&cursor=next');
 assert.deepEqual(second.body.friends.map(x=>x.id),['3']);
 assert.equal(second.body.nextCursor,null);
+const fallback=await get('/api/roblox?action=friends&userId=98765');
+assert.equal(fallback.status,200);
+assert.deepEqual(fallback.body.friends.map(x=>x.id),['20','21']);
+assert.equal(fallback.body.limited,true);
+assert.equal(fallback.body.nextCursor,null);
+const rejected=await get('/api/roblox?action=friends&userId=87654');
+assert.equal(rejected.status,403);
+assert.match(rejected.body.error,/duas consultas públicas/);
 const thumb=await get('/api/roblox?action=thumbnails&ids=1,2&type=head');
 assert.equal(thumb.body.images.length,2);
 assert.equal((await get('/api/roblox?action=friends&userId=x')).status,400);

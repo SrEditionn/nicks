@@ -324,6 +324,7 @@
     loadSource(id, signal, myGeneration);
     let cursor = null;
     let reason = 'complete';
+    let limited = false;
     let imageQueue = Promise.resolve();
     const seenCursors = new Set();
     try {
@@ -340,6 +341,7 @@
         }
         if (signal.aborted || myGeneration !== generation) return;
         pages++;
+        if (data.limited) limited = true;
         const fresh = addUsers(data.friends || []);
         // Load image batches in a serial queue while pagination continues.
         if (fresh.length) {
@@ -370,7 +372,8 @@
         setNotice('Não há amizades disponíveis para esse perfil. O usuário pode não ter amigos ou o Roblox pode restringir a visualização.', true);
       } else {
         progressText.textContent = `Concluído · ${users.size.toLocaleString('pt-BR')} amigos encontrados`;
-        if (reason === 'limit') setNotice('Consulta finalizada no limite de 1.000 perfis.', true);
+        if (limited) setNotice('Consulta alternativa: o Roblox disponibilizou até 200 amigos deste perfil. A lista pode estar incompleta.', true);
+        else if (reason === 'limit') setNotice('Consulta finalizada no limite de 1.000 perfis.', true);
       }
     } catch (error) {
       if (signal.aborted || myGeneration !== generation || error.name === 'AbortError') return;

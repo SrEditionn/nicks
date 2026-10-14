@@ -1,0 +1,31 @@
+name: Testar Ankoo (sem publicar)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar codigo
+        uses: actions/checkout@v4
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Conferir sintaxe
+        run: |
+          node --check functions/api/roblox.js
+          node --check public/main.js
+          node --check public/amigos/app.js
+      - name: Testar autenticação, lista e Roblox
+        run: |
+          node tests/test-auth.mjs
+          node tests/test-list.mjs
+          node tests/test-api.mjs
+          python3 tests/verificar_arquivos.py

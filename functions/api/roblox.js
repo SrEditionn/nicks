@@ -6,6 +6,7 @@
 const FRIENDS = 'https://friends.roblox.com';
 const USERS = 'https://users.roblox.com';
 const THUMBNAILS = 'https://thumbnails.roblox.com';
+const AVATARS = 'https://avatar.roblox.com';
 
 class ApiError extends Error {
   constructor(message, status = 502) {
@@ -138,6 +139,46 @@ export async function onRequestGet({ request }) {
         limited,
         ...(limited ? { note: 'O Roblox liberou apenas a consulta de até 200 amigos. A lista pode estar incompleta.' } : {}),
       });
+    }
+
+    // Só ao clicar: tenta uma roupa salva idêntica à roupa atual do usuário.
+    // Os cartões continuam usando as miniaturas em lote (sem custo extra).
+    if (action === 'neutral') {
+      if (!validId(userId)) throw new ApiError('Informe um ID válido.', 400);
+      const unavailable = { available: false, reason: 'Sem roupa salva correspondente à atual. Miniatura original mantida.' };
+      const quick = async url => {
+        try {
+          const response = await fetch(url, { signal: AbortSignal.timeout(5000), headers: { accept: 'application/json' } });
+          return response.ok ? await response.json() : null;
+        } catch (_) { return null; }
+      };
+      const [current, saved] = await Promise.all([
+        quick(AVATARS + '/v1/users/' + userId + '/avatar'),
+        quick(AVATARS + '/v2/avatar/users/' + userId + '/outfits?itemsPerPage=10&outfitType=Avatar&page=1'),
+      ]);
+      const signature = item => Array.isArray(item?.assets)
+        ? item.assets.map(asset => String(asset.id)).sort().join(',') : null;
+      const fingerprint = item => item && typeof item === 'object'
+        ? JSON.stringify(Object.fromEntries(Object.entries(item).sort(([a], [b]) => a.localeCompare(b)))) : null;
+      const matches = candidate => {
+        const a = signature(current), b = signature(candidate);
+        return !!a && a === b && current?.bodyColors && candidate?.bodyColors
+          && fingerprint(current.bodyColors) === fingerprint(candidate.bodyColors)
+          && fingerprint(current.scales) === fingerprint(candidate.scales)
+          && String(current.playerAvatarType ?? '') === String(candidate.playerAvatarType ?? '');
+      };
+      if (!current || !Array.isArray(saved?.data)) return json(unavailable);
+      const outfits = saved.data.filter(outfit => validId(String(outfit?.id ?? ''))).slice(0, 5);
+      const checked = await Promise.all(outfits.map(async outfit => ({
+        id: String(outfit.id),
+        detail: await quick(AVATARS + '/v3/outfits/' + outfit.id + '/details'),
+      })));
+      const match = checked.find(candidate => matches(candidate.detail));
+      if (!match) return json(unavailable);
+      const thumbnail = await quick(THUMBNAILS + '/v1/users/outfits?userOutfitIds=' + match.id + '&size=420x420&format=Png&isCircular=false');
+      const item = thumbnail?.data?.find(entry => String(entry.targetId) === match.id && entry.state === 'Completed');
+      if (!item?.imageUrl || !item.imageUrl.startsWith('https://')) return json(unavailable);
+      return json({ available: true, imageUrl: item.imageUrl, kind: 'matchingSavedOutfit' });
     }
 
     if (action === 'details') {

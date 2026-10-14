@@ -3,6 +3,8 @@
 const $ = id => document.getElementById(id);
 const KEY = 'roblox_nicks_v1';
 const WORKER = 'https://user.ankoo.workers.dev';
+const neutralBodies = new Map();
+const neutralBusy = new Set();
 // Somente URLs de imagens 2D estáticas. Impede exibir GIF/APNG ou
 // links de objetos 3D que possam ter sido guardados numa versão antiga.
 function isStatic2DThumbnail(url) {
@@ -133,9 +135,10 @@ function render() {
     };
 
     const stage = el('div', 'stage');
-    if (isStatic2DThumbnail(u.body)) {
+    const fullBodySrc = neutralBodies.get(u.id) || u.body;
+    if (isStatic2DThumbnail(fullBodySrc)) {
       const image = el('img', 'fullbody');
-      image.src = u.body;
+      image.src = fullBodySrc;
       image.alt = `Avatar de ${u.name || u.id}`;
       image.loading = 'lazy';
       stage.append(image);
@@ -149,6 +152,44 @@ function render() {
       image.loading = 'lazy';
       stage.append(image);
     }
+
+    const standing = el('button', 'neutral-pose-button', neutralBodies.has(u.id) ? '✓ Em pé' : 'Em pé');
+    standing.type = 'button';
+    standing.title = 'Tentar imagem neutra da roupa salva, sem atrasar os outros perfis';
+    standing.disabled = neutralBusy.has(u.id) || neutralBodies.has(u.id);
+    standing.onclick = async () => {
+      if (neutralBusy.has(u.id)) return;
+      neutralBusy.add(u.id);
+      standing.disabled = true;
+      standing.textContent = 'Buscando...';
+      try {
+        const response = await fetch('/api/roblox?action=neutral&userId=' + encodeURIComponent(u.id));
+        const result = await response.json();
+        if (!response.ok || !result.available || !isStatic2DThumbnail(result.imageUrl)) {
+          status(result.reason || 'Pose alternativa não disponível para este avatar.');
+          standing.textContent = 'Em pé';
+          return;
+        }
+        neutralBodies.set(u.id, result.imageUrl);
+        let image = stage.querySelector('.fullbody');
+        if (!image) {
+          image = el('img', 'fullbody');
+          image.alt = 'Avatar de ' + (u.name || u.id);
+          stage.querySelector('.avatar-placeholder')?.remove();
+          stage.prepend(image);
+        }
+        image.src = result.imageUrl;
+        standing.textContent = '✓ Em pé';
+        status('Miniatura alternativa da roupa salva carregada.');
+      } catch (_) {
+        standing.textContent = 'Em pé';
+        status('Não foi possível verificar uma pose alternativa.');
+      } finally {
+        neutralBusy.delete(u.id);
+        standing.disabled = neutralBodies.has(u.id);
+      }
+    };
+    stage.append(standing);
 
     const content = el('div', 'card-content');
     content.append(

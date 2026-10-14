@@ -27,6 +27,8 @@
   let cards = new Map();
   let pages = 0;
   let toastTimer;
+  const neutralBodies = new Map();
+  const neutralBusy = new Set();
 
   const profileUrl = (id) => `https://www.roblox.com/pt/users/${id}/profile`;
   // O Roblox fornece PNG 2D em /v1/users/avatar e avatar-headshot.
@@ -169,6 +171,45 @@
     skeleton.className = 'avatar-placeholder';
     skeleton.textContent = '?';
     art.append(skeleton);
+    const standing = document.createElement('button');
+    standing.className = 'neutral-pose-button';
+    standing.type = 'button';
+    standing.textContent = neutralBodies.has(user.id) ? '✓ Em pé' : 'Em pé';
+    standing.title = 'Tentar imagem neutra de roupa salva';
+    standing.disabled = neutralBodies.has(user.id);
+    standing.addEventListener('click', async () => {
+      if (neutralBusy.has(user.id)) return;
+      neutralBusy.add(user.id);
+      standing.disabled = true;
+      standing.textContent = 'Buscando...';
+      try {
+        const result = await fetchApi({ action: 'neutral', userId: user.id });
+        if (!result.available || !String(result.imageUrl || '').startsWith('https://')) {
+          standing.textContent = 'Em pé';
+          showToast(result.reason || 'Pose alternativa não disponível.');
+          return;
+        }
+        neutralBodies.set(user.id, result.imageUrl);
+        let image = art.querySelector('.fullbody');
+        if (!image) {
+          image = document.createElement('img');
+          image.className = 'fullbody';
+          image.alt = 'Avatar de ' + user.name;
+          art.querySelector('.avatar-placeholder')?.remove();
+          art.prepend(image);
+        }
+        image.src = result.imageUrl;
+        standing.textContent = '✓ Em pé';
+        showToast('Miniatura alternativa carregada!');
+      } catch (_) {
+        standing.textContent = 'Em pé';
+        showToast('Não foi possível buscar a pose alternativa.');
+      } finally {
+        neutralBusy.delete(user.id);
+        standing.disabled = neutralBodies.has(user.id);
+      }
+    });
+    art.append(standing);
 
     const content = document.createElement('div');
     content.className = 'card-content';
@@ -300,7 +341,7 @@
       const card = cards.get(item.id);
       const area = card.querySelector('.avatar-area');
       if (type === 'body') {
-        if (area.querySelector('.fullbody')) continue;
+        if (neutralBodies.has(item.id) || area.querySelector('.fullbody')) continue;
         const img = document.createElement('img');
         img.className = 'fullbody';
         img.alt = `Skin 2D de ${users.get(item.id)?.name || item.id}`;

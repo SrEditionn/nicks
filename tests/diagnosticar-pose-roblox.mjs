@@ -22,3 +22,15 @@ for (const [name, url] of endpoints) {
     }));
   } catch(e) {console.log(JSON.stringify({name,error:String(e.message).slice(0,160)}));}
 }
+
+const get=async url=>{try{const r=await fetch(url,{signal:AbortSignal.timeout(9000)});return {status:r.status,j:await r.json()}}catch(e){return {status:0,j:{}}}};
+const api='https://avatar.roblox.com';
+const avatar=(await get(api+'/v1/users/'+userId+'/avatar')).j;
+const saved=(await get(api+'/v2/avatar/users/'+userId+'/outfits?itemsPerPage=10&outfitType=Avatar&page=1')).j;
+const aSig=x=>Array.isArray(x?.assets)?x.assets.map(a=>String(a.id)).sort().join(','):'';
+const eq=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+for(const outfit of (saved.data||[]).slice(0,10)){
+ const info=await get(api+'/v3/outfits/'+outfit.id+'/details');
+ const data=info.j;
+ console.log(JSON.stringify({outfit:outfit.id,status:info.status,keys:Object.keys(data).slice(0,16),assets:data.assets?.length,equalAssets:aSig(avatar)===aSig(data),colors:!!data.bodyColors,scales:!!data.scales,equalScales:eq(avatar.scales,data.scales),equalColors:eq(avatar.bodyColors,data.bodyColors),type:avatar.playerAvatarType===data.playerAvatarType}));
+}

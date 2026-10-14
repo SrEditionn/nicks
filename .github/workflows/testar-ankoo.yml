@@ -29,3 +29,7 @@ jobs:
           node tests/test-list.mjs
           node tests/test-api.mjs
           python3 tests/verificar_arquivos.py
+
+      - name: Diagnosticar Roblox real (somente leitura; não causa falha)
+        continue-on-error: true
+        run: node tests/diagnosticar-pose-roblox.mjs

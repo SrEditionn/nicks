@@ -33,3 +33,7 @@ jobs:
       - name: Diagnosticar Roblox real (somente leitura; não causa falha)
         continue-on-error: true
         run: node tests/diagnosticar-pose-roblox.mjs
+
+      - name: Diagnosticar links diretos no site publicado
+        continue-on-error: true
+        run: node tests/diagnosticar-rotas.mjs

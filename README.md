@@ -48,3 +48,10 @@ A rota adicional GET /api/roblox?action=neutral&userId=ID **só é chamada ao cl
 Ela consulta os itens que o usuário veste, compara até 5 roupas salvas públicas (itens, cores de corpo, escalas e tipo de avatar) e só troca a imagem se uma roupa salva correspondente tiver miniatura disponível. Imagem e dados originais permanecem se não houver correspondência ou ocorrer erro.
 As miniaturas de roupas são uma alternativa independente da imagem de perfil personalizada, mas **o Roblox não garante oficialmente que sejam sempre em pose neutra**. A alternativa fica só na guia atual para não gravar um visual desatualizado no banco KV.
 Não é necessário token Roblox, login extra, modelos 3D ou nova variável Cloudflare. Não há requisições extras ao abrir a lista ou consultar amigos.
+
+
+## Publicação automática (rota de amigos corrigida)
+
+O projeto Pages `anko` está conectado diretamente ao GitHub `SrEditionn/nicks` (branch `main`). Em 14/10/2026, o build automático tinha o diretório de saída vazio: a Cloudflare publicava os arquivos da raiz em vez da pasta `public/`, provocando erros 404 na home e em `/amigos/?user=ID` após implantações do GitHub.
+
+O diretório foi ajustado via API do Pages para `public` (sem alterar KV, senhas ou outras configurações). Uma atualização no GitHub agora dispara publicação automática do conteúdo correto. O workflow manual de Wrangler continua disponível, mas não é necessário para cada mudança. O teste automático consulta os URLs diretos após a implantação na Cloudflare.

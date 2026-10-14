@@ -3,6 +3,12 @@
 const $ = id => document.getElementById(id);
 const KEY = 'roblox_nicks_v1';
 const WORKER = 'https://user.ankoo.workers.dev';
+// Somente URLs de imagens 2D estáticas. Impede exibir GIF/APNG ou
+// links de objetos 3D que possam ter sido guardados numa versão antiga.
+function isStatic2DThumbnail(url) {
+  if (typeof url !== 'string' || !url.startsWith('https://')) return false;
+  return !/(?:avatar|outfit)-3d|asset-thumbnail-animated|\.(?:gif|apng)(?:[?#]|$)|[?&]format=(?:gif|apng)(?:&|$)/i.test(url);
+}
 let data = [];
 let ready = false;
 let lastRefresh = 0;
@@ -127,7 +133,7 @@ function render() {
     };
 
     const stage = el('div', 'stage');
-    if (u.body) {
+    if (isStatic2DThumbnail(u.body)) {
       const image = el('img', 'fullbody');
       image.src = u.body;
       image.alt = `Avatar de ${u.name || u.id}`;
@@ -136,7 +142,7 @@ function render() {
     } else {
       stage.append(el('div', 'avatar-placeholder', '?'));
     }
-    if (u.img) {
+    if (isStatic2DThumbnail(u.img)) {
       const image = el('img', 'headshot');
       image.src = u.img;
       image.alt = `Miniatura de ${u.name || u.id}`;
@@ -274,8 +280,8 @@ async function refresh() {
       for(const u of data){
         const value=latest.get(u.id);if(!value)continue;
         if(value.name)u.name=value.name;
-        if(value.body)u.body=value.body;
-        if(value.img)u.img=value.img;
+        if(isStatic2DThumbnail(value.body))u.body=value.body;
+        if(isStatic2DThumbnail(value.img))u.img=value.img;
       }
       cache();render();
       status(`Atualizando skins... ${Math.min(i+3,chunks.length)}/${chunks.length} lotes`);

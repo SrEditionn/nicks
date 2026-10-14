@@ -34,3 +34,10 @@ A nova página já inicia a consulta por esse ID; a consulta da guia original
 permanece aberta. O navegador determina se a guia recém-criada será
 colocada em primeiro plano. Se bloquear pop-ups, a lista ainda é salva e o
 site informa que é preciso autorizar novas guias para o Ankoo.
+
+
+## Miniaturas de avatar 2D
+
+As duas páginas exibem apenas **miniaturas raster estáticas** do Roblox: corpo inteiro por `/v1/users/avatar` em PNG 420×420 e rosto por `/v1/users/avatar-headshot` em PNG 150×150. Não usam `/v1/users/avatar-3d`, vídeo, modelo 3D ou visualizador animado. URLs GIF/APNG, endpoints de objetos 3D e miniaturas animadas antigas são ignorados na interface. As imagens de corpo inteiro são atualizadas pelo Worker original, que também solicita PNG 2D, com fallback no Pages.
+
+**Limitação:** o próprio Roblox decide a pose usada na miniatura PNG. Uma pose diferente de pé reto ainda é uma **imagem 2D parada**, não um modelo 3D animado. Esta alteração não controla nem altera a pose do personagem.

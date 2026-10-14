@@ -7,7 +7,7 @@ admin_js=(root/'public/admin.js').read_text()
 friend_html=(root/'public/amigos/index.html').read_text()
 friend_js=(root/'public/amigos/app.js').read_text()
 mock='''
-window.__items = [{id:'111',name:'OldNick',body:'',img:''},{id:'222',name:'Second',body:'',img:''}];
+window.__items = [{id:'111',name:'OldNick',body:'https://example.test/animated.gif',img:''},{id:'222',name:'Second',body:'',img:''}];
 window.__isAdmin = false;
 window.fetch = async function(url, options){
  url=String(url);
@@ -61,6 +61,7 @@ with sync_playwright() as p:
  pg.evaluate(mock);pg.add_script_tag(content=admin_js);pg.add_script_tag(content=main_js)
  pg.locator('.card').nth(1).wait_for()
  assert pg.locator('.card').count()==2
+ assert pg.locator('img.fullbody').count()==0, 'GIF antigo não pode aparecer no lugar de thumbnail 2D'
  assert pg.locator('#cod').count()==0 and pg.locator('#srv').count()==0
  assert pg.locator('#add').is_hidden() and pg.locator('#in').is_hidden(), 'Guest cannot mutate'
  assert pg.locator('.tools button[title="Remover da lista"]').count()==2

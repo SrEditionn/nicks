@@ -29,6 +29,11 @@
   let toastTimer;
 
   const profileUrl = (id) => `https://www.roblox.com/pt/users/${id}/profile`;
+  // O Roblox fornece PNG 2D em /v1/users/avatar e avatar-headshot.
+  // Nunca aceitar links de thumbnails animadas ou de modelos 3D.
+  const isStatic2DThumbnail = (url) => typeof url === 'string' &&
+    url.startsWith('https://') &&
+    !/(?:avatar|outfit)-3d|asset-thumbnail-animated|\.(?:gif|apng)(?:[?#]|$)|[?&]format=(?:gif|apng)(?:&|$)/i.test(url);
 
   function extractUserId(value) {
     const raw = String(value).trim();
@@ -291,7 +296,7 @@
     const pending = [];
     for (const item of response.images || []) {
       if (item.state === 'Pending') pending.push(item.id);
-      if (!item.url || !cards.has(item.id)) continue;
+      if (!isStatic2DThumbnail(item.url) || !cards.has(item.id)) continue;
       const card = cards.get(item.id);
       const area = card.querySelector('.avatar-area');
       if (type === 'body') {
@@ -332,7 +337,7 @@
       sourceProfile = profile;
       updateSaveButtons();
       const url = thumbnail?.images?.[0]?.url;
-      if (url) {
+      if (isStatic2DThumbnail(url)) {
         sourceProfile.img = url;
         const img = document.createElement('img');
         img.src = url;

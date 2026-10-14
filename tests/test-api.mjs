@@ -24,6 +24,8 @@ globalThis.fetch = async (url, options={}) => {
     }
   }
   if(u.hostname === 'thumbnails.roblox.com'){
+    assert.equal(u.searchParams.get('format'), 'Png', 'A imagem deve ser PNG estático');
+    assert(!u.pathname.includes('-3d'), 'Não usar a API 3D');
     return Response.json({data:u.searchParams.get('userIds').split(',').map(x=>({targetId:Number(x),state:'Completed',imageUrl:`https://tr.rbxcdn.com/${x}`}))});
   }
   throw Error('Unmocked: '+url);
@@ -48,6 +50,11 @@ assert.equal(fallback.body.nextCursor,null);
 const rejected=await get('/api/roblox?action=friends&userId=87654');
 assert.equal(rejected.status,403);
 assert.match(rejected.body.error,/duas consultas públicas/);
+const fullBody=await get('/api/roblox?action=thumbnails&ids=1,2&type=body');
+assert.equal(fullBody.body.images.length,2);
+assert(calls.includes('/v1/users/avatar'), 'Precisa usar imagem de corpo inteiro 2D');
+const detail=await get('/api/roblox?action=details&ids=1,2');
+assert.equal(Object.keys(detail.body.profiles).length,2);
 const thumb=await get('/api/roblox?action=thumbnails&ids=1,2&type=head');
 assert.equal(thumb.body.images.length,2);
 assert.equal((await get('/api/roblox?action=friends&userId=x')).status,400);

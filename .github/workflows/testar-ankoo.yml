@@ -37,3 +37,11 @@ jobs:
       - name: Diagnosticar links diretos no site publicado
         continue-on-error: true
         run: node tests/diagnosticar-rotas.mjs
+
+      - name: Diagnosticar implantação principal Cloudflare (sem divulgar segredos)
+        continue-on-error: true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_PAGES_PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT }}
+        run: node tests/diagnosticar-producao-cloudflare.mjs
